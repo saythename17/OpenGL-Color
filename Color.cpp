@@ -25,7 +25,7 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 //lighting
-glm::vec3 lightPosition(1.2f, 1.0f, 2.0f);
+glm::vec3 lightPosition(1.0f, 0.7f, 1.2f);
 //represents the light(¡Ösun) location in world-space coordinates
 
 void user_input(GLFWwindow* window) {
@@ -86,14 +86,14 @@ int main() {
 	glfwSetFramebufferSizeCallback(window, window_size_change);
 
 	//register this function with GLFW each time the mouse moves
-	glfwSetCursorPosCallback(window, mouse_callback);
+	//glfwSetCursorPosCallback(window, mouse_callback);
 
 	//to zoon in, use mouse's scroll wheel
 	glfwSetScrollCallback(window, scroll_callback);
 
 	//to calculate the yaw and pitch values from mouse movement.
 	//When the application has focus, the mouse cursor should be hiden and stays within the window
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	//glad : load all OpenGL function pointers
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -250,9 +250,14 @@ int main() {
 	myShader.use();
 	myShader.setInt("texture1", 0);
 	myShader.setInt("texture2", 1);
-	myShader.setVec3("objectColor", 1.0f, 1.0f, 0.31f);
-	myShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 	myShader.setVec3("lightPos", lightPosition);
+	myShader.setVec3("viewPos", camera.Position);
+	myShader.setVec3("material.ambient", 0.5f, 0.5f, 0.5f);
+	myShader.setVec3("material.diffuse", 1.0f, 1.0f, 1.0f);
+	myShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+	myShader.setFloat("material.shininess", 80.0f);
+	myShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+	
 		
 
 
@@ -283,6 +288,16 @@ int main() {
 
 		myShader.use();
 
+		//change colors over time
+		glm::vec3 lightColor;
+		lightColor.x = sin(lastFrame * 0.9f) + 1.0f;
+		lightColor.y = cos(lastFrame * 0.5f) + 1.0f;
+		lightColor.z = cos(deltaTime * 100.0f) + 1.0f;
+		glm::vec3 diffuseColor = lightColor * glm::vec3(0.8f);
+		glm::vec3 ambientColor = diffuseColor * glm::vec3(0.4f);
+		myShader.setVec3("light.ambient", ambientColor);
+		myShader.setVec3("light.diffuse", diffuseColor);
+
 		//view/projection transformations
 		//pass projection matrix to shader(in this case it could change every frame)
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)4 / (float)3, .1f, 100.0f);
@@ -309,8 +324,8 @@ int main() {
 
 		//world transformation
 		glm::mat4 model = glm::mat4(1.0f);
-		float angle = (float)glfwGetTime() * 80.0f;
-		model = glm::rotate(model, glm::radians(angle), glm::vec3(.7f, 0.8f, 0.5f));
+		//float angle = (float)glfwGetTime() * 80.0f + 5.0f;
+		model = glm::rotate(model, glm::radians(40.0f), glm::vec3(0.0, 0.8f, 0.6f));
 		
 		myShader.setMat4("model", model);
 		//¢Õ
